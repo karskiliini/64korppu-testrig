@@ -1,0 +1,16 @@
+# 64korppu — udev-säännöt Arduino Nano -tunnistukseen
+# Luo /dev/arduino symlinkin automaattisesti.
+# Asennus: sudo cp 99-arduino.rules /etc/udev/rules.d/
+#          sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# CH340 (yleisin Nano-klooni)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="arduino", MODE="0666"
+
+# FTDI FT232R
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="arduino", MODE="0666"
+
+# ATmega16U2 (virallinen Arduino Nano)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", SYMLINK+="arduino", MODE="0666"
+
+# ATmega16U2 (Arduino Nano Every)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0058", SYMLINK+="arduino", MODE="0666"
