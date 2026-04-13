@@ -95,7 +95,22 @@ elapsed=$(( (end_time - start_time) / 1000000 ))
 if [ "$flash_ok" = "true" ]; then
     echo "FLASH_OK: $PORT ($hex_size bytes, ${elapsed}ms, baud=$BAUD)"
     # Odota Nanon uudelleenkäynnistys (bootloader ~1s + firmware start)
-    sleep 2
+    # WSL2 + usbipd: USB-laite katoaa ja palaa takaisin resetissä,
+    # auto-attach tarvitsee enemmän aikaa
+    if grep -qi "microsoft\|wsl" /proc/version 2>/dev/null; then
+        echo "WSL2: odotetaan USB-laitteen uudelleenliitäntää..."
+        sleep 4
+        # Odota portin ilmestymistä (usbipd auto-attach)
+        for i in $(seq 1 10); do
+            [ -e "$PORT" ] && break
+            sleep 1
+        done
+        if [ ! -e "$PORT" ]; then
+            echo "WARN: $PORT ei ilmestynyt takaisin — tarkista usbipd auto-attach"
+        fi
+    else
+        sleep 2
+    fi
     echo "Nano käynnistynyt uudelleen"
     exit 0
 else
