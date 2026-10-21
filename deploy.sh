@@ -77,11 +77,21 @@ ssh testrig "~/tools/flash.sh ~/firmware/latest.hex"
 if [ "$MONITOR" = "true" ]; then
     echo "[4/4] Monitoroidaan serial ($TIMEOUT s)..."
 
-    monitor_args="--timeout $TIMEOUT"
-    [ -n "$STOP_ON" ] && monitor_args="$monitor_args --stop-on '$STOP_ON'"
-    [ "$NO_RESET" = "true" ] && monitor_args="$monitor_args --no-reset"
+    # SSH sends one command string to a shell: quote every argument as data.
+    quote_remote_arg() {
+        printf "'"
+        printf '%s' "$1" | sed "s/'/'\"'\"'/g"
+        printf "'"
+    }
+    monitor_args=(--timeout "$TIMEOUT")
+    [ -n "$STOP_ON" ] && monitor_args+=(--stop-on "$STOP_ON")
+    [ "$NO_RESET" = "true" ] && monitor_args+=(--no-reset)
+    remote_command='~/tools/monitor.py'
+    for arg in "${monitor_args[@]}"; do
+        remote_command+=" $(quote_remote_arg "$arg")"
+    done
 
-    ssh testrig "~/tools/monitor.py $monitor_args"
+    ssh testrig "$remote_command"
     monitor_exit=$?
 
     if [ $monitor_exit -eq 0 ]; then
